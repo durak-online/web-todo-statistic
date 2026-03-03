@@ -138,17 +138,12 @@ function sortByUser(todos) {
 }
 
 function sortByDate(todos) {
-    return [...todos].sort((a, b) => {
-        const ad = a.date;
-        const bd = b.date;
-
-        if (ad && bd) {
-            if (bd !== ad) return bd.localeCompare(ad);
-            return a.text.localeCompare(b.text);
-        }
-        if (ad && !bd) return -1;
-        if (!ad && bd) return 1;
-        return a.text.localeCompare(b.text);
+    return todos.slice().sort((a, b) => {
+        const dateA = a.text.match(/;\s*(\d{4}-\d{2}-\d{2})/)?.[1];
+        const dateB = b.text.match(/;\s*(\d{4}-\d{2}-\d{2})/)?.[1];
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return new Date(dateB) - new Date(dateA);
     });
 }
 
