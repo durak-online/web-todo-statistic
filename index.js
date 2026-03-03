@@ -16,6 +16,9 @@ function processCommand(command) {
         case 'exit':
             process.exit(0);
             break;
+        case "important":
+            showImportant();
+            break;
         default:
             console.log('wrong command');
             break;
@@ -23,3 +26,15 @@ function processCommand(command) {
 }
 
 // TODO you can do it!
+
+function showImportant() {
+    for (const file of files) {
+        const lines = file.split("\n");
+        for (const line of lines) {
+            if (line.includes("// TODO")
+                && line.includes("!")) {
+                console.log(line);
+            }
+        }
+    }
+}
