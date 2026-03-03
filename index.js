@@ -1,5 +1,5 @@
-const {getAllFilePathsWithExtension, readFile} = require('./fileSystem');
-const {readLine} = require('./console');
+const { getAllFilePathsWithExtension, readFile } = require('./fileSystem');
+const { readLine } = require('./console');
 
 const files = getFiles();
 
@@ -23,3 +23,20 @@ function processCommand(command) {
 }
 
 // TODO you can do it!
+function findTODOInFile(file) {
+    const lines = file.split('/n');
+    const result = [];
+
+
+    for (const line of lines) {
+        if (line.include("// TODO")) {
+            result.push(line.trim())
+        }
+    }
+    // lines.forEach((line, index) => {
+    //     if (line.include("// TODO")) {
+    //         result.push(line.trim())
+    //     }
+    // });
+    return result;
+}
