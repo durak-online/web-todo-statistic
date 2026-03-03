@@ -8,7 +8,29 @@ readLine(processCommand);
 
 function getFiles() {
     const filePaths = getAllFilePathsWithExtension(process.cwd(), 'js');
-    return filePaths.map(path => readFile(path));
+    return filePaths.map((path) => ({ path, content: readFile(path) }));
+}
+
+function getAllTodos(files) {
+  const todos = [];
+
+  for (const file of files) {
+    const lines = file.content.split(/\r?\n/);
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (line.startsWith('// TODO ')) {
+        todos.push({
+          file: file.path,
+          line: i + 1,
+          text: line.slice('// TODO '.length),
+        });
+      }
+    }
+  }
+
+  return todos;
 }
 
 function processCommand(command) {
@@ -16,10 +38,24 @@ function processCommand(command) {
         case 'exit':
             process.exit(0);
             break;
+        case 'show': {
+            const todos = getAllTodos(files);
+
+            if (todos.length === 0) {
+                console.log('No TODO found');
+                break;
+            }
+
+            for (const t of todos) {
+                console.log(`${t.file}:${t.line} — ${t.text}`);
+            }
+            break;
+        }
+
         default:
             console.log('wrong command');
             break;
     }
 }
 
-// TODO you can do it!
+
