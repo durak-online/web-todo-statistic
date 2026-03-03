@@ -15,16 +15,16 @@ function getAllTodos(files) {
     const todos = [];
 
     for (const file of files) {
-        const lines = file.content.split(/\r?\n/);
+        const lines = file.content.split("\n");
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
 
-            if (line.startsWith('// TODO ')) {
+            if (line.includes('// TODO ')) {
                 todos.push({
                     file: file.path,
                     line: i + 1,
-                    text: line.slice('// TODO '.length),
+                    text: line.slice(line.indexOf('// TODO ') + 8).trim(),
                 });
             }
         }
@@ -34,30 +34,45 @@ function getAllTodos(files) {
 }
 
 function processCommand(command) {
-    switch (command) {
-        case 'exit':
-            process.exit(0);
-            break;
-        case 'show': {
-            const todos = getAllTodos(files);
+    const input = command.split(' ');
+    if (input.length > 1) {
+        const [cmd, ...args] = input;
+        switch (cmd) {
+            case "user":
+                showUser(args);
+                break;
 
-            if (todos.length === 0) {
-                console.log('No TODO found');
+            default:
+                console.log('wrong command');
+                break;
+        }
+    } else {
+        switch (command) {
+            case 'exit':
+                process.exit(0);
+                break;
+            case 'show': {
+                const todos = getAllTodos(files);
+
+                if (todos.length === 0) {
+                    console.log('No TODO found');
+                    break;
+                }
+
+                for (const t of todos) {
+                    console.log(`${t.file}:${t.line} — ${t.text}`);
+                }
                 break;
             }
 
-            for (const t of todos) {
-                console.log(`${t.file}:${t.line} — ${t.text}`);
-            }
-            break;
-        }
+            case "important":
+                showImportant();
+                break;
 
-        case "important":
-            showImportant();
-            break;
-        default:
-            console.log('wrong command');
-            break;
+            default:
+                console.log('wrong command');
+                break;
+        }
     }
 }
 
@@ -69,12 +84,12 @@ function findTODOInFile(file) {
 
     for (const line of lines) {
         if (line.include("// TODO")) {
-            result.push(line.trim())
+            result.push(line.trim());
         }
     }
     // lines.forEach((line, index) => {
     //     if (line.include("// TODO")) {
-    //         result.push(line.trim())
+    //         result.push(line.trim());
     //     }
     // });
     return result;
@@ -88,6 +103,19 @@ function showImportant() {
                 && line.includes("!")) {
                 console.log(line);
             }
+        }
+    }
+}
+
+function showUser(...args) {
+    const userName = args[0].join(" ");
+    for (const todo of getAllTodos(files)) {
+        const [name, date, text] = todo.text
+            .split(";")
+            .map(s => s.trim());
+
+        if (name === userName) {
+            console.log(todo.text);
         }
     }
 }
