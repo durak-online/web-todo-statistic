@@ -1,5 +1,5 @@
-const { getAllFilePathsWithExtension, readFile } = require('./fileSystem');
-const { readLine } = require('./console');
+const {getAllFilePathsWithExtension, readFile} = require('./fileSystem');
+const {readLine} = require('./console');
 
 const files = getFiles();
 
@@ -8,34 +8,34 @@ readLine(processCommand);
 
 function getFiles() {
     const filePaths = getAllFilePathsWithExtension(process.cwd(), 'js');
-    return filePaths.map((path) => ({ path, content: readFile(path) }));
+    return filePaths.map((path) => ({path, content: readFile(path)}));
 }
 
 function getAllTodos(files) {
-  const todos = [];
+    const todos = [];
 
-  for (const file of files) {
-    const lines = file.content.split(/\r?\n/);
+    for (const file of files) {
+        const lines = file.content.split(/\r?\n/);
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
 
-        if (line.includes('// TODO ')) {
-            const text = line.slice(line.indexOf('// TODO ') + 8).trim();
-            const meta = parseTodoText(text);
+            if (line.includes('// TODO ')) {
+                const text = line.slice(line.indexOf('// TODO ') + 8).trim();
+                const meta = parseTodoText(text);
 
-            todos.push({
-                file: file.path,
-                line: i + 1,
-                text,
-                ...meta,
-            });
+                todos.push({
+                    file: file.path,
+                    line: i + 1,
+                    text,
+                    ...meta,
+                });
+            }
         }
     }
-  }
-
-  return todos;
+    return todos;
 }
+
 
 function processCommand(command) {
     const input = command.split(' ');
@@ -80,6 +80,9 @@ function processCommand(command) {
                 break;
             }
 
+            case "important":
+                showImportant();
+                break;
             default:
                 console.log('wrong command');
                 break;
@@ -189,4 +192,15 @@ function parseTodoText(text) {
   }
 
   return { importance, user, date };
+}
+function showImportant() {
+    for (const file of files) {
+        const lines = file.split("\n");
+        for (const line of lines) {
+            if (line.includes("// TODO")
+                && line.includes("!")) {
+                console.log(line);
+            }
+        }
+    }
 }
