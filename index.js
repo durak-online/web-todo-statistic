@@ -211,13 +211,13 @@ function showImportant() {
 }
 
 function showUser(...args) {
-    const userName = args[0].join(" ");
+    const userName = args[0].join(" ").toLowerCase();
     for (const todo of getAllTodos(files)) {
         const [name, date, text] = todo.text
             .split(";")
             .map(s => s.trim());
 
-        if (name === userName) {
+        if (name.toLowerCase() === userName) {
             console.log(todo.text);
         }
     }
