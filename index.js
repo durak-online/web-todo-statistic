@@ -20,13 +20,17 @@ function getAllTodos(files) {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      if (line.startsWith('// TODO ')) {
-        todos.push({
-          file: file.path,
-          line: i + 1,
-          text: line.slice('// TODO '.length),
-        });
-      }
+        if (line.includes('// TODO ')) {
+            const text = line.slice(line.indexOf('// TODO ') + 8).trim();
+            const meta = parseTodoText(text);
+
+            todos.push({
+                file: file.path,
+                line: i + 1,
+                text,
+                ...meta,
+            });
+        }
     }
   }
 
@@ -34,27 +38,52 @@ function getAllTodos(files) {
 }
 
 function processCommand(command) {
-    switch (command) {
-        case 'exit':
-            process.exit(0);
-            break;
-        case 'show': {
-            const todos = getAllTodos(files);
+    const input = command.split(' ');
+    if (input.length > 1) {
+        const [cmd, ...args] = input;
+        switch (cmd) {
+            case 'sort': {
+                const arg = args[0];
+                const todos = getAllTodos(getFiles());
 
-            if (todos.length === 0) {
-                console.log('No TODO found');
+                if (arg === 'importance') {
+                    printTodos(sortByImportance(todos));
+                } else if (arg === 'user') {
+                    printTodos(sortByUser(todos));
+                } else if (arg === 'date') {
+                    printTodos(sortByDate(todos));
+                } else {
+                    console.log('wrong command');
+                }
+                return; 
+            }
+            default:
+                console.log('wrong command');
+                break;
+        }
+    } else {
+        switch (command) {
+            case 'exit':
+                process.exit(0);
+                break;
+            case 'show': {
+                const todos = getAllTodos(getFiles());
+
+                if (todos.length === 0) {
+                    console.log('No TODO found');
+                    break;
+                }
+
+                for (const t of todos) {
+                    console.log(`${t.file}:${t.line} — ${t.text}`);
+                }
                 break;
             }
 
-            for (const t of todos) {
-                console.log(`${t.file}:${t.line} — ${t.text}`);
-            }
-            break;
+            default:
+                console.log('wrong command');
+                break;
         }
-
-        default:
-            console.log('wrong command');
-            break;
     }
 }
 
@@ -75,4 +104,89 @@ function findTODOInFile(file) {
     //     }
     // });
     return result;
+}
+
+function sortByImportance(todos) {
+  return [...todos].sort((a, b) => {
+    if (b.importance !== a.importance) 
+        return b.importance - a.importance;
+    return a.text.localeCompare(b.text);
+  });
+}
+
+function sortByUser(todos) {
+  return [...todos].sort((a, b) => {
+    const au = a.user;
+    const bu = b.user;
+
+    if (au && bu) {
+      const cmp = au.localeCompare(bu);
+      if (cmp !== 0) return cmp;
+      return a.text.localeCompare(b.text);
+    }
+    if (au && !bu) return -1;
+    if (!au && bu) return 1;
+    return a.text.localeCompare(b.text);
+  });
+}
+
+function sortByDate(todos) {
+  return [...todos].sort((a, b) => {
+    const ad = a.date;
+    const bd = b.date;
+
+    if (ad && bd) {
+      if (bd !== ad) return bd.localeCompare(ad);
+      return a.text.localeCompare(b.text);
+    }
+    if (ad && !bd) return -1;
+    if (!ad && bd) return 1;
+    return a.text.localeCompare(b.text);
+  });
+}
+
+function printTodos(todos) {
+  if (!todos.length) {
+    console.log('No TODO found');
+    return;
+  }
+  for (const t of todos) {
+    console.log(`${t.file}:${t.line} — ${t.text}`);
+  }
+}
+
+function parseTodoText(text) {
+  let importance = 0;
+  for (const ch of text) {
+    if (ch === '!') importance++;
+  }
+
+  let user = null;
+  const words = text.split(' ');
+  for (const w of words) {
+    if (w.startsWith('@') && w.length > 1) {
+      user = w.slice(1);
+      break;
+    }
+  }
+
+  let date = null;
+  for (const w of words) {
+    if (
+      w.length === 10 &&
+      w[4] === '-' &&
+      w[7] === '-'
+    ) {
+      const y = w.slice(0, 4);
+      const m = w.slice(5, 7);
+      const d = w.slice(8, 10);
+
+      if (!isNaN(Number(y)) && !isNaN(Number(m)) && !isNaN(Number(d))) {
+        date = w;
+        break;
+      }
+    }
+  }
+
+  return { importance, user, date };
 }
